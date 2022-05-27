@@ -254,6 +254,21 @@ void MainWindow::radiochange(int id, bool checked)
     {
         emit macFlush();
     }
+
+    if(macNumber == (id >> 2))
+    {
+        QString at;
+        if(model[macNumber] & 0x01)
+        {
+            at = "AT+PROFILE=67\r\n";
+        }else
+        {
+            at = "AT+PROFILE=160\r\n";
+        }
+
+        BlSendText->append(at);
+        sport->send(at);
+    }
 }
 
 void MainWindow::pair()
@@ -362,9 +377,8 @@ void MainWindow::process()
     foreach(item,data)
     while(!data.isEmpty())
     {
-        //qDebug()<<item;
         item = data[0];
-        qDebug()<<item;
+        //qDebug()<<item;
         if(item.contains("OK", Qt::CaseInsensitive))
         {
 
