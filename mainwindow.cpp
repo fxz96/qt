@@ -17,16 +17,18 @@ MainWindow::~MainWindow()
 void MainWindow::varite_init()
 {
     /**命令初始化**/
-    at_query[0] = "+SSP=0";
-    at_query[1] = "+NAME";
-    at_query[2] = "+PIN";
-    at_query[3] = "+ADDR";
-    at_query[4] = "+SPKVOL";
-    at_query[5] = "+MICGAIN";
-    at_query[6] = "+SSP";
-    at_query[7] = "+PROFILE";
-    at_query[8] = "+PIN=13579";
-    at_query[9] = "+VER";
+    at_query[0] = "+ADDR";
+    at_query[1] = "+PIN";
+    at_query[2] = "+NAME";
+    at_query[3] = "+SPKVOL";
+    at_query[4] = "+MICGAIN";
+    at_query[5] = "+SSP";
+    at_query[6] = "+PROFILE";
+    at_query[7] = "+VER";
+
+    at_query[8] = "+RESTORE";
+    at_query[9] = "+PIN=13579";
+    at_query[10] = "+SSP=0";
 }
 
 /***画面布局****/
@@ -203,6 +205,7 @@ void MainWindow::picture_init()
     /***定时器***/
     at_query_timer = new QTimer(this);
     at_link_timer = new QTimer(this);
+    at_bl_init = new QTimer(this);
 }
 
 
@@ -301,15 +304,16 @@ void MainWindow::pair()
         LocalBlLine[0]->setText("小板SOURCE");
         break;
     }
+
 }
 
 void MainWindow::BlLink(int id)
 {
     atLink.clear();
 
-    atLink<<"AT+RESTORE\r\n";
-    atLink<<"AT+SSP=0\r\n";
-    atLink<<"AT+PIN=13579\r\n";
+    //atLink<<"AT+RESTORE\r\n";
+    //atLink<<"AT+SSP=0\r\n";
+    //atLink<<"AT+PIN=13579\r\n";
     if(model[macNumber] & 0x01)
     {
         atLink<<"AT+PROFILE=67\r\n";
@@ -346,8 +350,15 @@ void MainWindow::setLink()
 /***启动查询定时器***/
 void MainWindow::startQuery()
 {
-    at_query_timer->start(100);
     at_query_cnt = 0;
+    if(model[macNumber] & 0x01)
+    {
+        at_query[11] = "AT+PROFILE=67\r\n";
+    }else
+    {
+        at_query[11] = "AT+PROFILE=160\r\n";
+    }
+    at_query_timer->start(100);
 }
 
 /***查询蓝牙设备信息***/
@@ -356,10 +367,21 @@ void MainWindow::startupQuery()
     sport->send("AT"+at_query[at_query_cnt]+"\r\n");
     BlSendText->append("AT"+at_query[at_query_cnt]+"\r\n");
     at_query_cnt++;
-    if(at_query_cnt > 9)
+    if(fistFlag == 0)
     {
-        at_query_cnt = 0;
-        at_query_timer->stop();
+        if(at_query_cnt > 7)
+        {
+            at_query_cnt = 0;
+            at_query_timer->stop();
+        }
+    }
+    else
+    {
+        if(at_query_cnt > 11)
+        {
+            at_query_cnt = 0;
+            at_query_timer->stop();
+        }
     }
 }
 
@@ -414,7 +436,7 @@ void MainWindow::process()
                     if(str.contains(lin, Qt::CaseInsensitive))
                     {
                         macNumber = cnt;
-                        qDebug()<<"设备"<<cnt;
+                        fistFlag = 0;
                         emit macFlush();
                         break;
                         continue;
@@ -426,6 +448,7 @@ void MainWindow::process()
                     BlMac << lin;
                     BlSetLine[cnt]->setText(lin);
                     macNumber = cnt;
+                    fistFlag = 1;
                     emit macFlush();
                 }
             }

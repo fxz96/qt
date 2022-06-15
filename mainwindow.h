@@ -41,7 +41,7 @@ public:
 private:
     /***记录蓝牙模式***/
     qint8 model[4] = {0,1,2,3};
-    QString at_query[10];
+    QString at_query[12];
     qint8 at_query_cnt = 0;
 
     QList <QString> BlMac;
@@ -49,6 +49,10 @@ private:
     qint8 macNumber;
 
     QList <QString> atLink;
+
+    qint8 fistFlag = 0;
+
+    //QString atinit[4] = {"AT+RESTORE\r\n","AT+SSP=0\r\n","AT+PIN=13579\r\n",""};
 
 
 /***函数****/
@@ -118,6 +122,7 @@ private:
     /***定时器***/
     QTimer *at_query_timer;
     QTimer *at_link_timer;
+    QTimer *at_bl_init;
 
 signals:
     void macFlush();
